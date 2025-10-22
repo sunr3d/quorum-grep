@@ -26,11 +26,7 @@ func GetConfig() (*Config, error) {
 func setDefaults(cfg *config.Config) {
 	cfg.SetDefault("LOG_LEVEL", "info")
 
-	cfg.SetDefault("GRPC_SERVER.PORT", 50051)
-	cfg.SetDefault("GRPC_SERVER.ID", 1)
-
 	cfg.SetDefault("CLIENT.SERVER_LIST", []string{"localhost:50051", "localhost:50052", "localhost:50053"})
-	cfg.SetDefault("CLIENT.QUORUM_THRESHOLD", 2)
 	cfg.SetDefault("CLIENT.TIMEOUT", "30s")
 	cfg.SetDefault("CLIENT.CHUNK_SIZE", 1024)
 }

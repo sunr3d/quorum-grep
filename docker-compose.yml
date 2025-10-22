@@ -1,0 +1,34 @@
+services:
+  grep-server-1:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    ports:
+      - "50051:50051"
+    command: ["./grep-server", "--port", "50051"]
+    networks:
+      - grep-network
+
+  grep-server-2:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    ports:
+      - "50052:50052"
+    command: ["./grep-server", "--port", "50052"]
+    networks:
+      - grep-network
+
+  grep-server-3:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    ports:
+      - "50053:50053"
+    command: ["./grep-server", "--port", "50053"]
+    networks:
+      - grep-network
+
+networks:
+  grep-network:
+    driver: bridge

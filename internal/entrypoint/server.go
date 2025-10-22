@@ -10,7 +10,7 @@ import (
 	pbg "github.com/sunr3d/quorum-grep/proto/grepsvc"
 )
 
-func RunServer(ctx context.Context, cfg *config.Config) error {
+func RunServer(ctx context.Context, cfg *config.GRPCServerConfig) error {
 	svc := grepsvc.New()
 
 	handler := grpchandlers.New(svc)

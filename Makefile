@@ -1,3 +1,5 @@
+all: up build-client
+
 up:
 	docker compose up -d --build
 
@@ -10,18 +12,25 @@ rebuild: clean up
 
 clean:
 	docker compose down -v
+	rm -f ./mygrep
+
+build-client:
+	go build -o mygrep ./cmd/client/main.go
 
 protogen:
 	protoc --go_out=proto --go-grpc_out=proto api/grep_service/grep.proto
 
 logs:
-	docker compose logs -f app
+	docker compose logs -f
 
-test: mocks
+test:
 	go test -v ./...
 
-mocks:
-	go generate ./...
+test-comparison: all
+	cd test_files && ./test_comparison.sh
 
 fmt:
 	go fmt ./...
+
+lint:
+	golangci-lint run

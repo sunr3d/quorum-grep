@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"os"
 	"os/signal"
 	"syscall"
@@ -16,14 +17,13 @@ func main() {
 	zlog.Init()
 	zlog.Logger.Info().Msg("Запуск сервера grep...")
 
-	cfg, err := config.GetConfig()
-	if err != nil {
-		zlog.Logger.Fatal().
-			Err(err).
-			Msg("config.GetConfig")
+	port := flag.Int("port", 50051, "порт для запуска сервера")
+	flag.Parse()
+
+	cfg := &config.GRPCServerConfig{
+		Port: *port,
 	}
 
-	zlog.SetLevel(cfg.LogLevel)
 	zlog.Logger.Info().Msgf("cfg: %+v", cfg)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -34,5 +34,4 @@ func main() {
 			Err(err).
 			Msg("entrypoint.RunServer")
 	}
-
 }

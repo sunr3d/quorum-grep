@@ -1,14 +1,9 @@
 LOG_LEVEL: info
 
-GRPC_SERVER:
-  PORT: 50051
-  ID: 1
-
 CLIENT:
   SERVER_LIST:
     - "localhost:50051"
     - "localhost:50052"
     - "localhost:50053"
-  QUORUM_THRESHOLD: 2
   TIMEOUT: 30s
   CHUNK_SIZE: 1024

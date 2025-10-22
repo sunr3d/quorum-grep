@@ -1,22 +1,20 @@
 package models
 
 type Task struct {
-	ID      string
-	Data    []byte
-	Index   int
-	Options GrepOptions
+	Data        []byte
+	Index       int
+	LineNumbers []int64
+	Options     GrepOptions
 }
 
 type Result struct {
-	TaskID     string
 	Matches    []Match
 	MatchCount int
 	Error      string
+	TaskIndex  int
 }
 
 type Match struct {
-	LineNum       int
-	Content       []byte
-	ContextBefore [][]byte
-	ContextAfter  [][]byte
+	Content    []byte
+	LineNumber int64
 }

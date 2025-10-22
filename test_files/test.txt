@@ -1,0 +1,6 @@
+hello world
+pattern found
+another line
+pattern again
+last line
+special.pattern

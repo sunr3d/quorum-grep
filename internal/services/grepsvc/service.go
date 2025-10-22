@@ -20,8 +20,12 @@ func New() services.GrepService {
 }
 
 // ProcessChunk - метод для обработки кусочка данных.
-func (s *grepService) ProcessChunk(ctx context.Context, task *models.Task) (*models.Result, error) {
+func (s *grepService) ProcessChunk(_ context.Context, task *models.Task) (*models.Result, error) {
 	lines := bytes.Split(task.Data, []byte("\n"))
+	lineLen := len(lines)
+	if lineLen > 0 && len(lines[lineLen-1]) == 0 {
+		lines = lines[:lineLen-1]
+	}
 
 	pattern, err := s.makePattern(task.Options)
 	if err != nil {
@@ -31,10 +35,8 @@ func (s *grepService) ProcessChunk(ctx context.Context, task *models.Task) (*mod
 	matches := s.findMatches(lines, pattern, task)
 
 	return &models.Result{
-		TaskID:     task.ID,
 		Matches:    matches,
 		MatchCount: len(matches),
-		Error:      "",
 	}, nil
 }
 
@@ -42,19 +44,34 @@ func (s *grepService) ProcessChunk(ctx context.Context, task *models.Task) (*mod
 
 // findMatches - поиск совпадений в строках.
 func (s *grepService) findMatches(lines [][]byte, pattern *regexp.Regexp, task *models.Task) []models.Match {
-	matches := make([]models.Match, 0, len(lines))
-	collected := make(map[int]bool, len(lines))
+	matches := make([]models.Match, 0, len(lines)*2)
+	collected := make(map[int]struct{}, len(lines))
 
 	for i, line := range lines {
 		if s.matchLine(pattern, line, task.Options) {
-			contextBefore, contextAfter := s.getContext(lines, i, task.Options, collected)
+			contextBefore, contextAfter := s.getContext(lines, i, task, collected)
 
-			matches = append(matches, models.Match{
-				LineNum:       i + 1,
-				Content:       line,
-				ContextBefore: contextBefore,
-				ContextAfter:  contextAfter,
-			})
+			for _, ctxLine := range contextBefore {
+				matches = append(matches, models.Match{
+					Content:    ctxLine.Content,
+					LineNumber: ctxLine.LineNumber,
+				})
+			}
+
+			if _, ok := collected[i]; !ok {
+				collected[i] = struct{}{}
+				matches = append(matches, models.Match{
+					Content:    line,
+					LineNumber: task.LineNumbers[i],
+				})
+			}
+
+			for _, ctxLine := range contextAfter {
+				matches = append(matches, models.Match{
+					Content:    ctxLine.Content,
+					LineNumber: ctxLine.LineNumber,
+				})
+			}
 		}
 	}
 
@@ -62,23 +79,34 @@ func (s *grepService) findMatches(lines [][]byte, pattern *regexp.Regexp, task *
 }
 
 // getContext - получение контекста для совпадения.
-func (s *grepService) getContext(lines [][]byte, pivot int, opts models.GrepOptions, collected map[int]bool) ([][]byte, [][]byte) {
-	start, end := s.getContextRange(pivot, len(lines), opts)
+func (s *grepService) getContext(
+	lines [][]byte,
+	pivot int,
+	task *models.Task,
+	collected map[int]struct{},
+) ([]models.Match, []models.Match) {
+	start, end := s.getContextRange(pivot, len(lines), task.Options)
 
-	contextBefore := make([][]byte, 0, end-start+1)
-	contextAfter := make([][]byte, 0, end-start+1)
+	contextBefore := make([]models.Match, 0, end-start+1)
+	contextAfter := make([]models.Match, 0, end-start+1)
 
 	for i := start; i < pivot; i++ {
-		if !collected[i] {
-			collected[i] = true
-			contextBefore = append(contextBefore, lines[i])
+		if _, ok := collected[i]; !ok {
+			collected[i] = struct{}{}
+			contextBefore = append(contextBefore, models.Match{
+				Content:    lines[i],
+				LineNumber: task.LineNumbers[i],
+			})
 		}
 	}
 
 	for i := pivot + 1; i <= end; i++ {
-		if !collected[i] {
-			collected[i] = true
-			contextAfter = append(contextAfter, lines[i])
+		if _, ok := collected[i]; !ok {
+			collected[i] = struct{}{}
+			contextAfter = append(contextAfter, models.Match{
+				Content:    lines[i],
+				LineNumber: task.LineNumbers[i],
+			})
 		}
 	}
 

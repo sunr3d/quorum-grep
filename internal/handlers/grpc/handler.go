@@ -12,6 +12,7 @@ type handler struct {
 	svc services.GrepService
 }
 
+// New - конструктор handler.
 func New(svc services.GrepService) pbg.GrepServiceServer {
 	return &handler{
 		svc: svc,

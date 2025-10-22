@@ -3,17 +3,25 @@ package grpchandlers
 import (
 	"context"
 
-	"google.golang.org/protobuf/types/known/emptypb"
+	"github.com/wb-go/wbf/zlog"
 
 	"github.com/sunr3d/quorum-grep/models"
 	pbg "github.com/sunr3d/quorum-grep/proto/grepsvc"
 )
 
+// ProcessChunk - ручка gRPC для обработки куска данных.
 func (h *handler) ProcessChunk(ctx context.Context, req *pbg.ChunkRequest) (*pbg.ChunkResponse, error) {
+	zlog.Logger.Info().
+		Str("task_id", req.TaskId).
+		Int("chunk_index", int(req.ChunkIndex)).
+		Int("data_size", len(req.Data)).
+		Str("pattern", req.Options.Pattern).
+		Msg("Получен запрос на обработку куска данных")
+
 	task := &models.Task{
-		ID:    req.TaskId,
-		Data:  req.Data,
-		Index: int(req.ChunkIndex),
+		Data:        req.Data,
+		Index:       int(req.ChunkIndex),
+		LineNumbers: req.LineNumbers,
 		Options: models.GrepOptions{
 			Pattern:    req.Options.Pattern,
 			After:      int(req.Options.After),
@@ -29,32 +37,32 @@ func (h *handler) ProcessChunk(ctx context.Context, req *pbg.ChunkRequest) (*pbg
 
 	result, err := h.svc.ProcessChunk(ctx, task)
 	if err != nil {
+		zlog.Logger.Error().
+			Err(err).
+			Str("task_id", req.TaskId).
+			Err(err).
+			Msg("Ошибка при обработке куска данных")
 		return &pbg.ChunkResponse{
 			TaskId: req.TaskId,
-			Error:  err.Error(),
 		}, nil
 	}
 
 	matches := make([]*pbg.Match, len(result.Matches))
 	for i, match := range result.Matches {
 		matches[i] = &pbg.Match{
-			LineNum:       int32(match.LineNum),
-			Content:       match.Content,
-			ContextBefore: match.ContextBefore,
-			ContextAfter:  match.ContextAfter,
+			Content:    match.Content,
+			LineNumber: match.LineNumber,
 		}
 	}
 
-	return &pbg.ChunkResponse{
-		TaskId:     result.TaskID,
-		Matches:    matches,
-		MatchCount: int32(result.MatchCount),
-		Error:      result.Error,
-	}, nil
-}
+	zlog.Logger.Info().
+		Str("task_id", req.TaskId).
+		Int("matches_count", len(result.Matches)).
+		Msg("Кусок данных обработан")
 
-func (h *handler) HealthCheck(ctx context.Context, _ *emptypb.Empty) (*pbg.HealthResponse, error) {
-	return &pbg.HealthResponse{
-		Ok: true,
+	return &pbg.ChunkResponse{
+		TaskId:     req.TaskId,
+		Matches:    matches,
+		MatchCount: int64(len(result.Matches)),
 	}, nil
 }

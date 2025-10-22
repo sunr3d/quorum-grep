@@ -11,7 +11,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -21,7 +20,6 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	GrepService_ProcessChunk_FullMethodName = "/grepsvc.GrepService/ProcessChunk"
-	GrepService_HealthCheck_FullMethodName  = "/grepsvc.GrepService/HealthCheck"
 )
 
 // GrepServiceClient is the client API for GrepService service.
@@ -29,7 +27,6 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GrepServiceClient interface {
 	ProcessChunk(ctx context.Context, in *ChunkRequest, opts ...grpc.CallOption) (*ChunkResponse, error)
-	HealthCheck(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*HealthResponse, error)
 }
 
 type grepServiceClient struct {
@@ -50,22 +47,11 @@ func (c *grepServiceClient) ProcessChunk(ctx context.Context, in *ChunkRequest, 
 	return out, nil
 }
 
-func (c *grepServiceClient) HealthCheck(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*HealthResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(HealthResponse)
-	err := c.cc.Invoke(ctx, GrepService_HealthCheck_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // GrepServiceServer is the server API for GrepService service.
 // All implementations must embed UnimplementedGrepServiceServer
 // for forward compatibility.
 type GrepServiceServer interface {
 	ProcessChunk(context.Context, *ChunkRequest) (*ChunkResponse, error)
-	HealthCheck(context.Context, *emptypb.Empty) (*HealthResponse, error)
 	mustEmbedUnimplementedGrepServiceServer()
 }
 
@@ -78,9 +64,6 @@ type UnimplementedGrepServiceServer struct{}
 
 func (UnimplementedGrepServiceServer) ProcessChunk(context.Context, *ChunkRequest) (*ChunkResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ProcessChunk not implemented")
-}
-func (UnimplementedGrepServiceServer) HealthCheck(context.Context, *emptypb.Empty) (*HealthResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method HealthCheck not implemented")
 }
 func (UnimplementedGrepServiceServer) mustEmbedUnimplementedGrepServiceServer() {}
 func (UnimplementedGrepServiceServer) testEmbeddedByValue()                     {}
@@ -121,24 +104,6 @@ func _GrepService_ProcessChunk_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-func _GrepService_HealthCheck_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(GrepServiceServer).HealthCheck(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: GrepService_HealthCheck_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GrepServiceServer).HealthCheck(ctx, req.(*emptypb.Empty))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // GrepService_ServiceDesc is the grpc.ServiceDesc for GrepService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -149,10 +114,6 @@ var GrepService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ProcessChunk",
 			Handler:    _GrepService_ProcessChunk_Handler,
-		},
-		{
-			MethodName: "HealthCheck",
-			Handler:    _GrepService_HealthCheck_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

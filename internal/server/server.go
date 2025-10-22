@@ -17,23 +17,23 @@ const (
 	ShutdownTimeout = 30 * time.Second
 )
 
-type server struct {
+type Server struct {
 	addr       string
 	grpcServer *grpc.Server
 }
 
 // New - создает новый сервер gRPC.
-func New(cfg *config.Config) *server {
+func New(cfg *config.GRPCServerConfig) *Server {
 	grpcServer := grpc.NewServer()
 
-	return &server{
-		addr:       fmt.Sprintf(":%d", cfg.GRPCServer.Port),
+	return &Server{
+		addr:       fmt.Sprintf(":%d", cfg.Port),
 		grpcServer: grpcServer,
 	}
 }
 
 // Run - запускает сервер gRPC с graceful shutdown.
-func (s *server) Run(ctx context.Context) error {
+func (s *Server) Run(ctx context.Context) error {
 	listener, err := net.Listen("tcp", s.addr)
 	if err != nil {
 		return fmt.Errorf("net.Listen %s: %w", s.addr, err)
@@ -83,6 +83,6 @@ func (s *server) Run(ctx context.Context) error {
 	}
 }
 
-func (s *server) GetGRPCServer() *grpc.Server {
+func (s *Server) GetGRPCServer() *grpc.Server {
 	return s.grpcServer
 }

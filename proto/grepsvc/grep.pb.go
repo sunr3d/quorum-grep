@@ -9,7 +9,6 @@ package grepsvc
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -25,9 +24,9 @@ const (
 type GrepOptions struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Pattern       string                 `protobuf:"bytes,1,opt,name=pattern,proto3" json:"pattern,omitempty"`
-	After         int32                  `protobuf:"varint,2,opt,name=after,proto3" json:"after,omitempty"`
-	Before        int32                  `protobuf:"varint,3,opt,name=before,proto3" json:"before,omitempty"`
-	Around        int32                  `protobuf:"varint,4,opt,name=around,proto3" json:"around,omitempty"`
+	After         int64                  `protobuf:"varint,2,opt,name=after,proto3" json:"after,omitempty"`
+	Before        int64                  `protobuf:"varint,3,opt,name=before,proto3" json:"before,omitempty"`
+	Around        int64                  `protobuf:"varint,4,opt,name=around,proto3" json:"around,omitempty"`
 	Count         bool                   `protobuf:"varint,5,opt,name=count,proto3" json:"count,omitempty"`
 	IgnoreCase    bool                   `protobuf:"varint,6,opt,name=ignore_case,json=ignoreCase,proto3" json:"ignore_case,omitempty"`
 	Invert        bool                   `protobuf:"varint,7,opt,name=invert,proto3" json:"invert,omitempty"`
@@ -74,21 +73,21 @@ func (x *GrepOptions) GetPattern() string {
 	return ""
 }
 
-func (x *GrepOptions) GetAfter() int32 {
+func (x *GrepOptions) GetAfter() int64 {
 	if x != nil {
 		return x.After
 	}
 	return 0
 }
 
-func (x *GrepOptions) GetBefore() int32 {
+func (x *GrepOptions) GetBefore() int64 {
 	if x != nil {
 		return x.Before
 	}
 	return 0
 }
 
-func (x *GrepOptions) GetAround() int32 {
+func (x *GrepOptions) GetAround() int64 {
 	if x != nil {
 		return x.Around
 	}
@@ -132,10 +131,8 @@ func (x *GrepOptions) GetLineNum() bool {
 
 type Match struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	LineNum       int32                  `protobuf:"varint,1,opt,name=line_num,json=lineNum,proto3" json:"line_num,omitempty"`
-	Content       []byte                 `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
-	ContextBefore [][]byte               `protobuf:"bytes,3,rep,name=context_before,json=contextBefore,proto3" json:"context_before,omitempty"`
-	ContextAfter  [][]byte               `protobuf:"bytes,4,rep,name=context_after,json=contextAfter,proto3" json:"context_after,omitempty"`
+	Content       []byte                 `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
+	LineNumber    int64                  `protobuf:"varint,2,opt,name=line_number,json=lineNumber,proto3" json:"line_number,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -170,13 +167,6 @@ func (*Match) Descriptor() ([]byte, []int) {
 	return file_api_grep_service_grep_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *Match) GetLineNum() int32 {
-	if x != nil {
-		return x.LineNum
-	}
-	return 0
-}
-
 func (x *Match) GetContent() []byte {
 	if x != nil {
 		return x.Content
@@ -184,26 +174,20 @@ func (x *Match) GetContent() []byte {
 	return nil
 }
 
-func (x *Match) GetContextBefore() [][]byte {
+func (x *Match) GetLineNumber() int64 {
 	if x != nil {
-		return x.ContextBefore
+		return x.LineNumber
 	}
-	return nil
-}
-
-func (x *Match) GetContextAfter() [][]byte {
-	if x != nil {
-		return x.ContextAfter
-	}
-	return nil
+	return 0
 }
 
 type ChunkRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	TaskId        string                 `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
 	Data          []byte                 `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
-	ChunkIndex    int32                  `protobuf:"varint,3,opt,name=chunk_index,json=chunkIndex,proto3" json:"chunk_index,omitempty"`
-	Options       *GrepOptions           `protobuf:"bytes,4,opt,name=options,proto3" json:"options,omitempty"`
+	ChunkIndex    int64                  `protobuf:"varint,3,opt,name=chunk_index,json=chunkIndex,proto3" json:"chunk_index,omitempty"`
+	LineNumbers   []int64                `protobuf:"varint,4,rep,packed,name=line_numbers,json=lineNumbers,proto3" json:"line_numbers,omitempty"`
+	Options       *GrepOptions           `protobuf:"bytes,5,opt,name=options,proto3" json:"options,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -252,11 +236,18 @@ func (x *ChunkRequest) GetData() []byte {
 	return nil
 }
 
-func (x *ChunkRequest) GetChunkIndex() int32 {
+func (x *ChunkRequest) GetChunkIndex() int64 {
 	if x != nil {
 		return x.ChunkIndex
 	}
 	return 0
+}
+
+func (x *ChunkRequest) GetLineNumbers() []int64 {
+	if x != nil {
+		return x.LineNumbers
+	}
+	return nil
 }
 
 func (x *ChunkRequest) GetOptions() *GrepOptions {
@@ -270,7 +261,7 @@ type ChunkResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	TaskId        string                 `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
 	Matches       []*Match               `protobuf:"bytes,2,rep,name=matches,proto3" json:"matches,omitempty"`
-	MatchCount    int32                  `protobuf:"varint,3,opt,name=match_count,json=matchCount,proto3" json:"match_count,omitempty"`
+	MatchCount    int64                  `protobuf:"varint,3,opt,name=match_count,json=matchCount,proto3" json:"match_count,omitempty"`
 	Error         string                 `protobuf:"bytes,4,opt,name=error,proto3" json:"error,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -320,7 +311,7 @@ func (x *ChunkResponse) GetMatches() []*Match {
 	return nil
 }
 
-func (x *ChunkResponse) GetMatchCount() int32 {
+func (x *ChunkResponse) GetMatchCount() int64 {
 	if x != nil {
 		return x.MatchCount
 	}
@@ -334,88 +325,41 @@ func (x *ChunkResponse) GetError() string {
 	return ""
 }
 
-type HealthResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Ok            bool                   `protobuf:"varint,1,opt,name=ok,proto3" json:"ok,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *HealthResponse) Reset() {
-	*x = HealthResponse{}
-	mi := &file_api_grep_service_grep_proto_msgTypes[4]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *HealthResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*HealthResponse) ProtoMessage() {}
-
-func (x *HealthResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_grep_service_grep_proto_msgTypes[4]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use HealthResponse.ProtoReflect.Descriptor instead.
-func (*HealthResponse) Descriptor() ([]byte, []int) {
-	return file_api_grep_service_grep_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *HealthResponse) GetOk() bool {
-	if x != nil {
-		return x.Ok
-	}
-	return false
-}
-
 var File_api_grep_service_grep_proto protoreflect.FileDescriptor
 
 const file_api_grep_service_grep_proto_rawDesc = "" +
 	"\n" +
-	"\x1bapi/grep_service/grep.proto\x12\agrepsvc\x1a\x1bgoogle/protobuf/empty.proto\"\xed\x01\n" +
+	"\x1bapi/grep_service/grep.proto\x12\agrepsvc\"\xed\x01\n" +
 	"\vGrepOptions\x12\x18\n" +
 	"\apattern\x18\x01 \x01(\tR\apattern\x12\x14\n" +
-	"\x05after\x18\x02 \x01(\x05R\x05after\x12\x16\n" +
-	"\x06before\x18\x03 \x01(\x05R\x06before\x12\x16\n" +
-	"\x06around\x18\x04 \x01(\x05R\x06around\x12\x14\n" +
+	"\x05after\x18\x02 \x01(\x03R\x05after\x12\x16\n" +
+	"\x06before\x18\x03 \x01(\x03R\x06before\x12\x16\n" +
+	"\x06around\x18\x04 \x01(\x03R\x06around\x12\x14\n" +
 	"\x05count\x18\x05 \x01(\bR\x05count\x12\x1f\n" +
 	"\vignore_case\x18\x06 \x01(\bR\n" +
 	"ignoreCase\x12\x16\n" +
 	"\x06invert\x18\a \x01(\bR\x06invert\x12\x14\n" +
 	"\x05fixed\x18\b \x01(\bR\x05fixed\x12\x19\n" +
-	"\bline_num\x18\t \x01(\bR\alineNum\"\x88\x01\n" +
-	"\x05Match\x12\x19\n" +
-	"\bline_num\x18\x01 \x01(\x05R\alineNum\x12\x18\n" +
-	"\acontent\x18\x02 \x01(\fR\acontent\x12%\n" +
-	"\x0econtext_before\x18\x03 \x03(\fR\rcontextBefore\x12#\n" +
-	"\rcontext_after\x18\x04 \x03(\fR\fcontextAfter\"\x8c\x01\n" +
+	"\bline_num\x18\t \x01(\bR\alineNum\"B\n" +
+	"\x05Match\x12\x18\n" +
+	"\acontent\x18\x01 \x01(\fR\acontent\x12\x1f\n" +
+	"\vline_number\x18\x02 \x01(\x03R\n" +
+	"lineNumber\"\xaf\x01\n" +
 	"\fChunkRequest\x12\x17\n" +
 	"\atask_id\x18\x01 \x01(\tR\x06taskId\x12\x12\n" +
 	"\x04data\x18\x02 \x01(\fR\x04data\x12\x1f\n" +
-	"\vchunk_index\x18\x03 \x01(\x05R\n" +
-	"chunkIndex\x12.\n" +
-	"\aoptions\x18\x04 \x01(\v2\x14.grepsvc.GrepOptionsR\aoptions\"\x89\x01\n" +
+	"\vchunk_index\x18\x03 \x01(\x03R\n" +
+	"chunkIndex\x12!\n" +
+	"\fline_numbers\x18\x04 \x03(\x03R\vlineNumbers\x12.\n" +
+	"\aoptions\x18\x05 \x01(\v2\x14.grepsvc.GrepOptionsR\aoptions\"\x89\x01\n" +
 	"\rChunkResponse\x12\x17\n" +
 	"\atask_id\x18\x01 \x01(\tR\x06taskId\x12(\n" +
 	"\amatches\x18\x02 \x03(\v2\x0e.grepsvc.MatchR\amatches\x12\x1f\n" +
-	"\vmatch_count\x18\x03 \x01(\x05R\n" +
+	"\vmatch_count\x18\x03 \x01(\x03R\n" +
 	"matchCount\x12\x14\n" +
-	"\x05error\x18\x04 \x01(\tR\x05error\" \n" +
-	"\x0eHealthResponse\x12\x0e\n" +
-	"\x02ok\x18\x01 \x01(\bR\x02ok2\x8c\x01\n" +
+	"\x05error\x18\x04 \x01(\tR\x05error2L\n" +
 	"\vGrepService\x12=\n" +
-	"\fProcessChunk\x12\x15.grepsvc.ChunkRequest\x1a\x16.grepsvc.ChunkResponse\x12>\n" +
-	"\vHealthCheck\x12\x16.google.protobuf.Empty\x1a\x17.grepsvc.HealthResponseB\x12Z\x10/grepsvc;grepsvcb\x06proto3"
+	"\fProcessChunk\x12\x15.grepsvc.ChunkRequest\x1a\x16.grepsvc.ChunkResponseB\x12Z\x10/grepsvc;grepsvcb\x06proto3"
 
 var (
 	file_api_grep_service_grep_proto_rawDescOnce sync.Once
@@ -429,24 +373,20 @@ func file_api_grep_service_grep_proto_rawDescGZIP() []byte {
 	return file_api_grep_service_grep_proto_rawDescData
 }
 
-var file_api_grep_service_grep_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_api_grep_service_grep_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_api_grep_service_grep_proto_goTypes = []any{
-	(*GrepOptions)(nil),    // 0: grepsvc.GrepOptions
-	(*Match)(nil),          // 1: grepsvc.Match
-	(*ChunkRequest)(nil),   // 2: grepsvc.ChunkRequest
-	(*ChunkResponse)(nil),  // 3: grepsvc.ChunkResponse
-	(*HealthResponse)(nil), // 4: grepsvc.HealthResponse
-	(*emptypb.Empty)(nil),  // 5: google.protobuf.Empty
+	(*GrepOptions)(nil),   // 0: grepsvc.GrepOptions
+	(*Match)(nil),         // 1: grepsvc.Match
+	(*ChunkRequest)(nil),  // 2: grepsvc.ChunkRequest
+	(*ChunkResponse)(nil), // 3: grepsvc.ChunkResponse
 }
 var file_api_grep_service_grep_proto_depIdxs = []int32{
 	0, // 0: grepsvc.ChunkRequest.options:type_name -> grepsvc.GrepOptions
 	1, // 1: grepsvc.ChunkResponse.matches:type_name -> grepsvc.Match
 	2, // 2: grepsvc.GrepService.ProcessChunk:input_type -> grepsvc.ChunkRequest
-	5, // 3: grepsvc.GrepService.HealthCheck:input_type -> google.protobuf.Empty
-	3, // 4: grepsvc.GrepService.ProcessChunk:output_type -> grepsvc.ChunkResponse
-	4, // 5: grepsvc.GrepService.HealthCheck:output_type -> grepsvc.HealthResponse
-	4, // [4:6] is the sub-list for method output_type
-	2, // [2:4] is the sub-list for method input_type
+	3, // 3: grepsvc.GrepService.ProcessChunk:output_type -> grepsvc.ChunkResponse
+	3, // [3:4] is the sub-list for method output_type
+	2, // [2:3] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name
 	2, // [2:2] is the sub-list for extension extendee
 	0, // [0:2] is the sub-list for field type_name
@@ -463,7 +403,7 @@ func file_api_grep_service_grep_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_grep_service_grep_proto_rawDesc), len(file_api_grep_service_grep_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

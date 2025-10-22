@@ -11,3 +11,8 @@ type GrepOptions struct {
 	Fixed      bool
 	LineNum    bool
 }
+
+type GrepConfig struct {
+	Options GrepOptions
+	Files   []string
+}
